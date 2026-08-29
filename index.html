@@ -628,18 +628,19 @@
       <div class="auth-field">
         <label class="auth-label">密码</label>
         <input id="regPass" class="auth-input" type="password" placeholder="至少 6 位" autocomplete="new-password" />
-      </div>
       <div class="auth-field">
         <label class="auth-label">确认密码</label>
         <input id="regConfirm" class="auth-input" type="password" placeholder="再输入一次" autocomplete="new-password" />
+      </div>
+      <div class="auth-field">
+        <label class="auth-label">绑定QQ</label>
+        <input id="regQQ" class="auth-input" type="text" placeholder="请输入你的QQ号（选填）" autocomplete="off" />
       </div>
       <button id="regBtn" class="auth-btn" onclick="doRegister()">注 册</button>
       <div class="auth-foot">
         已有账号？<a class="auth-link" onclick="showLogin()">返回登录</a>
       </div>
-      <div class="auth-hint">
-        注册账号默认为 <span class="auth-role-badge viewer">观察者</span>，可查看所有数据；管理操作由 owner 账号完成
-      </div>
+    </div>
     </div>
   </div>
 </div>
@@ -889,14 +890,16 @@ async function doRegister() {
   const username = document.getElementById('regUser').value.trim();
   const password = document.getElementById('regPass').value;
   const confirm = document.getElementById('regConfirm').value;
+  const qq = document.getElementById('regQQ').value.trim();
   if (!username || !password) { setAuthErr('reg', '请填写完整'); return; }
+  if (qq && !/^[1-9]\d{4,10}$/.test(qq)) { setAuthErr('reg', 'QQ号格式不正确'); return; }
   authBtnLoading('reg', true);
   try {
     const r = await fetch(API_BASE + '/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-  
-      body: JSON.stringify({ username, password, confirm })
+
+      body: JSON.stringify({ username, password, confirm, qq })
     });
     const data = await r.json();
     if (!r.ok || !data.ok) throw new Error(data.err || ('HTTP ' + r.status));
