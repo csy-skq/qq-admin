@@ -606,6 +606,8 @@
       <button id="loginBtn" class="auth-btn" onclick="doLogin()">登 录</button>
       <div class="auth-foot">
         还没有账号？<a class="auth-link" onclick="showReg()">立即注册</a>
+        <span style="margin:0 6px;color:#c8d6c9;">|</span>
+        <a class="auth-link" onclick="showForgot()">忘记密码？</a>
       </div>
       <div class="auth-hint">
         默认管理员账号 <b>admin</b>，首次使用建议注册新账号或修改默认密码
@@ -639,6 +641,40 @@
       <button id="regBtn" class="auth-btn" onclick="doRegister()">注 册</button>
       <div class="auth-foot">
         已有账号？<a class="auth-link" onclick="showLogin()">返回登录</a>
+      </div>
+    </div>
+
+    <!-- 忘记密码面板 -->
+    <div id="authForgot" style="display:none;">
+      <div class="auth-brand">
+        <div class="auth-brand-logo">沈</div>
+        <div class="auth-brand-text">沈不渝 · 管理台<small>QQ 陪聊后台</small></div>
+      </div>
+      <div class="auth-title">重置密码</div>
+      <div class="auth-sub">输入绑定的QQ号，验证码将发送到该QQ</div>
+      <div id="forgotErr" class="auth-err"></div>
+      <div class="auth-field">
+        <label class="auth-label">绑定QQ</label>
+        <input id="forgotQQ" class="auth-input" type="text" placeholder="请输入绑定的QQ号" autocomplete="off" />
+      </div>
+      <button id="forgotSendBtn" class="auth-btn" onclick="doForgotSend()">发送验证码</button>
+      <div id="forgotResetArea" style="display:none;">
+        <div class="auth-field">
+          <label class="auth-label">验证码</label>
+          <input id="forgotCode" class="auth-input" type="text" placeholder="5位数字验证码" autocomplete="off" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">新密码</label>
+          <input id="forgotPass" class="auth-input" type="password" placeholder="至少 6 位" autocomplete="new-password" />
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">确认新密码</label>
+          <input id="forgotConfirm" class="auth-input" type="password" placeholder="再输入一次" autocomplete="new-password" />
+        </div>
+        <button id="forgotResetBtn" class="auth-btn" onclick="doForgotReset()">重置密码</button>
+      </div>
+      <div class="auth-foot">
+        想起密码了？<a class="auth-link" onclick="showLogin()">返回登录</a>
       </div>
     </div>
     </div>
@@ -856,10 +892,17 @@ function showAuth(mode) {
     if (mode === 'reg') {
       document.getElementById('authLogin').style.display = 'none';
       document.getElementById('authReg').style.display = '';
+      document.getElementById('authForgot').style.display = 'none';
       setTimeout(() => document.getElementById('regUser').focus(), 50);
+    } else if (mode === 'forgot') {
+      document.getElementById('authLogin').style.display = 'none';
+      document.getElementById('authReg').style.display = 'none';
+      document.getElementById('authForgot').style.display = '';
+      setTimeout(() => document.getElementById('forgotQQ').focus(), 50);
     } else {
       document.getElementById('authLogin').style.display = '';
       document.getElementById('authReg').style.display = 'none';
+      document.getElementById('authForgot').style.display = 'none';
       setTimeout(() => document.getElementById('loginUser').focus(), 50);
     }
   }
@@ -867,15 +910,17 @@ function showAuth(mode) {
 
 function showLogin() { clearAuthErr(); showAuth('login'); }
 function showReg()   { clearAuthErr(); showAuth('reg'); }
+function showForgot(){ clearAuthErr(); showAuth('forgot'); }
 
 function setAuthErr(which, msg) {
-  const el = document.getElementById(which === 'login' ? 'loginErr' : 'regErr');
+  const el = document.getElementById(which === 'login' ? 'loginErr' : (which === 'reg' ? 'regErr' : 'forgotErr'));
   el.textContent = msg;
   el.classList.add('show');
 }
 function clearAuthErr() {
   document.getElementById('loginErr').classList.remove('show');
   document.getElementById('regErr').classList.remove('show');
+  document.getElementById('forgotErr').classList.remove('show');
 }
 
 function authBtnLoading(which, on) {
@@ -947,6 +992,74 @@ async function doRegister() {
   }
 }
 
+/* ============ 忘记密码 ============ */
+async function doForgotSend() {
+  clearAuthErr();
+  const qq = document.getElementById('forgotQQ').value.trim();
+  if (!/^[1-9]\d{4,10}$/.test(qq)) { setAuthErr('forgot', 'QQ号格式不正确'); return; }
+  const btn = document.getElementById('forgotSendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="auth-loading"></span>发送中';
+  try {
+    const r = await apiFetch('/api/forgot/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qq })
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw new Error(data.err || ('HTTP ' + r.status));
+    document.getElementById('forgotResetArea').style.display = '';
+    btn.innerHTML = '✓ 已发送，10分钟内有效';
+    toast(data.msg || '验证码已发送', 'ok');
+    setTimeout(() => document.getElementById('forgotCode').focus(), 50);
+  } catch (e) {
+    const msg = (e && e.message) || '';
+    setAuthErr('forgot', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
+      ? '无法连接后端服务：已自动尝试多个通道均失败，请检查网络后重试'
+      : (e.message || '发送失败'));
+    btn.disabled = false;
+    btn.innerHTML = '发送验证码';
+  }
+}
+
+async function doForgotReset() {
+  clearAuthErr();
+  const qq = document.getElementById('forgotQQ').value.trim();
+  const code = document.getElementById('forgotCode').value.trim();
+  const password = document.getElementById('forgotPass').value;
+  const confirm = document.getElementById('forgotConfirm').value;
+  if (!qq || !code) { setAuthErr('forgot', '请填写QQ号和验证码'); return; }
+  if (!/^\d{5}$/.test(code)) { setAuthErr('forgot', '验证码为5位数字'); return; }
+  if (!password || password.length < 6) { setAuthErr('forgot', '新密码至少6位'); return; }
+  if (password !== confirm) { setAuthErr('forgot', '两次密码不一致'); return; }
+  const btn = document.getElementById('forgotResetBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="auth-loading"></span>重置中';
+  try {
+    const r = await apiFetch('/api/forgot/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ qq, code, password, confirm })
+    });
+    const data = await r.json();
+    if (!r.ok || !data.ok) throw new Error(data.err || ('HTTP ' + r.status));
+    toast('密码已重置，请使用新密码登录', 'ok');
+    document.getElementById('forgotQQ').value = '';
+    document.getElementById('forgotCode').value = '';
+    document.getElementById('forgotPass').value = '';
+    document.getElementById('forgotConfirm').value = '';
+    document.getElementById('forgotResetArea').style.display = 'none';
+    showLogin();
+  } catch (e) {
+    const msg = (e && e.message) || '';
+    setAuthErr('forgot', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
+      ? '无法连接后端服务：已自动尝试多个通道均失败，请检查网络后重试'
+      : (e.message || '重置失败'));
+    btn.disabled = false;
+    btn.innerHTML = '重置密码';
+  }
+}
+
 async function doLogout() {
   try {
     await apiFetch('/api/logout', { method: 'POST', headers: authHeaders() });
@@ -994,7 +1107,12 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
   const layer = document.getElementById('authLayer');
   if (!layer || layer.style.display === 'none') return;
+  const forgot = document.getElementById('authForgot');
   if (document.getElementById('authReg').style.display !== 'none') doRegister();
+  else if (forgot && forgot.style.display !== 'none') {
+    if (document.getElementById('forgotResetArea').style.display !== 'none') doForgotReset();
+    else doForgotSend();
+  }
   else doLogin();
 });
 
