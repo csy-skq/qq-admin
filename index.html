@@ -1152,20 +1152,26 @@ async function openUser(uid) {
 
 function renderDrawer(d) {
   const body = document.getElementById('drawerBody');
+  // 数据隔离：viewer 只能查看自己绑定的 QQ（只读），owner 拥有全部管理操作
+  const isAdmin = !!(currentUser && currentUser.role === 'owner');
   let h = '';
   // 档案
   h += '<div class="section"><div class="section-title"><span class="ico">📇</span>人设档案</div>'
-    + '<textarea id="profileArea" placeholder="（空）">' + esc(d.profile || '') + '</textarea>'
+    + '<textarea id="profileArea" ' + (isAdmin ? '' : 'readonly ') + 'placeholder="（空）">' + esc(d.profile || '') + '</textarea>'
     + '<div class="form-row" style="margin-top:10px">'
-    +   '<button class="btn primary" onclick="saveProfile(\'' + escAttr(d.uid) + '\')">保存档案</button>'
-    +   '<button class="btn" onclick="loadProfile()">放弃修改</button>'
+    + (isAdmin
+        ? '<button class="btn primary" onclick="saveProfile(\'' + escAttr(d.uid) + '\')">保存档案</button>'
+          + '<button class="btn" onclick="loadProfile()">放弃修改</button>'
+        : '<span style="font-size:12px;color:#7a9a80;">🔒 观察者仅查看，档案由管理员维护</span>')
     + '</div></div>';
-  // 代发
-  h += '<div class="section"><div class="section-title"><span class="ico">📤</span>代发消息</div>'
-    + '<div class="form-row">'
-    +   '<input type="text" class="search" id="sendMsgInput" placeholder="输入私聊内容…回车发送">'
-    +   '<button class="btn primary" onclick="sendMsg(\'' + escAttr(d.uid) + '\')">发送</button>'
-    + '</div></div>';
+  // 代发（仅管理员）
+  if (isAdmin) {
+    h += '<div class="section"><div class="section-title"><span class="ico">📤</span>代发消息</div>'
+      + '<div class="form-row">'
+      +   '<input type="text" class="search" id="sendMsgInput" placeholder="输入私聊内容…回车发送">'
+      +   '<button class="btn primary" onclick="sendMsg(\'' + escAttr(d.uid) + '\')">发送</button>'
+      + '</div></div>';
+  }
   // 历史（时间倒序）
   h += '<div class="section"><div class="section-title"><span class="ico">💬</span>历史消息（最新在前）</div>';
   if (!d.history.length) {
@@ -1178,10 +1184,12 @@ function renderDrawer(d) {
         + '<div class="hmsg-head">'
         +   '<span class="hmsg-tag ' + m.role + '">' + (m.role === 'user' ? '用户' : '沈不渝') + '</span>'
         +   '<span class="hmsg-idx">#' + m.idx + '</span>'
-        +   '<div class="hmsg-ops">'
-        +     '<button class="icon-btn" title="编辑" onclick="editMsg(\'' + escAttr(d.uid) + '\',' + m.idx + ')">✎</button>'
-        +     '<button class="icon-btn danger" title="删除" onclick="delMsg(\'' + escAttr(d.uid) + '\',' + m.idx + ')">🗑</button>'
-        +   '</div>'
+        + (isAdmin
+            ? '<div class="hmsg-ops">'
+              + '<button class="icon-btn" title="编辑" onclick="editMsg(\'' + escAttr(d.uid) + '\',' + m.idx + ')">✎</button>'
+              + '<button class="icon-btn danger" title="删除" onclick="delMsg(\'' + escAttr(d.uid) + '\',' + m.idx + ')">🗑</button>'
+            + '</div>'
+            : '')
         + '</div>'
         + '<div class="hmsg-content">' + esc(m.content) + '</div>'
         + '</div>';
@@ -1190,7 +1198,7 @@ function renderDrawer(d) {
   }
   h += '</div>';
   body.innerHTML = h;
-  // 回车发送
+  // 回车发送（仅管理员有输入框）
   const sendInput = document.getElementById('sendMsgInput');
   if (sendInput) {
     sendInput.addEventListener('keydown', function(e) {
