@@ -136,6 +136,18 @@
     background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg);
     padding: 16px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
   }
+  .recent-panel { margin-top: 28px; }
+  .recent-list { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+  .recent-item {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .recent-item:last-child { border-bottom: none; }
+  .recent-item:hover { background: rgba(67, 160, 71, 0.05); }
+  .recent-time { color: var(--muted); font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+  .recent-nick { color: var(--accent); font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+  .recent-text { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+  .auth-tip { font-size: 12px; color: #5a8060; margin: 8px 2px 0; line-height: 1.5; }
   .pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); position: relative; }
   .pulse::after {
     content: ''; position: absolute; inset: -4px; border-radius: 50%;
@@ -427,20 +439,26 @@
   /* ============== 登录/注册覆盖层 ============== */
   .auth-mask {
     position: fixed; inset: 0; z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     background: linear-gradient(135deg, #e8f5e9 0%, #f4f9f6 50%, #ffffff 100%);
     padding: 20px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .auth-mask::before {
-    content: ''; position: absolute; inset: 0;
+    content: ''; position: fixed; inset: 0;
     background:
       radial-gradient(circle at 20% 30%, rgba(67, 160, 71, 0.12), transparent 50%),
       radial-gradient(circle at 80% 70%, rgba(102, 187, 106, 0.10), transparent 50%);
-    pointer-events: none;
+    pointer-events: none; z-index: 0;
   }
   .auth-card {
-    position: relative; z-index: 1;
+    position: relative; z-index: 10;
     width: 100%; max-width: 420px;
+    margin-top: auto;
+    margin-bottom: auto;
     background: #ffffff;
     border-radius: 20px;
     padding: 36px 32px 28px;
@@ -658,10 +676,12 @@
         <input id="forgotQQ" class="auth-input" type="text" placeholder="请输入绑定的QQ号" autocomplete="off" />
       </div>
       <button id="forgotSendBtn" class="auth-btn" onclick="doForgotSend()">发送验证码</button>
+      <div class="auth-tip">🔔 验证码将通过机器人私聊发送到该QQ，10分钟内有效</div>
       <div id="forgotResetArea" style="display:none;">
         <div class="auth-field">
           <label class="auth-label">验证码</label>
           <input id="forgotCode" class="auth-input" type="text" placeholder="5位数字验证码" autocomplete="off" />
+          <div class="auth-tip">请打开QQ查看机器人发来的验证码消息</div>
         </div>
         <div class="auth-field">
           <label class="auth-label">新密码</label>
@@ -716,12 +736,20 @@
       <div class="stats">
         <div class="stat-card accent"><div class="stat-label">已接入用户</div><div class="stat-value" id="ovUsers">—</div><div class="stat-foot" id="ovUsersFoot">等待连接…</div></div>
         <div class="stat-card"><div class="stat-label">历史消息总数</div><div class="stat-value" id="ovMsg">—</div><div class="stat-foot">memory/*.json 合计</div></div>
+        <div class="stat-card"><div class="stat-label">今日聊天</div><div class="stat-value" id="ovToday">—</div><div class="stat-foot">今天 chat_log 条数</div></div>
         <div class="stat-card"><div class="stat-label">全局聊天记录</div><div class="stat-value" id="ovChat">—</div><div class="stat-foot">chat_log.txt 行数</div></div>
+        <div class="stat-card"><div class="stat-label">最后活跃</div><div class="stat-value" id="ovActive">—</div><div class="stat-foot">最近一条聊天时间</div></div>
         <div class="stat-card ok"><div class="stat-label">后台服务</div><div class="stat-value" id="ovPort">—</div><div class="stat-foot" id="ovPortFoot">admin_server</div></div>
       </div>
       <div class="connection-bar">
         <span class="pulse" id="apiPulse"></span>
         <div class="conn-text"><b id="connTitle">正在连接…</b><br><span style="color:var(--muted);font-size:12px" id="connDetail">正在探测后端服务</span></div>
+      </div>
+      <div class="recent-panel">
+        <div class="page-head" style="margin-bottom:10px;">
+          <div class="page-title">最近动态<small>最新聊天记录</small></div>
+        </div>
+        <div id="ovRecent" class="recent-list"><div class="empty">加载中…</div></div>
       </div>
     </section>
 
@@ -751,6 +779,7 @@
           <option value="300">最近 300 条</option>
         </select>
         <button class="btn" onclick="loadChat()">↻ 刷新</button>
+        <button class="btn" onclick="exportChatTXT()">⬇ 导出 TXT</button>
       </div>
       <div id="chatWrap" class="chat-feed"></div>
     </section>
@@ -1178,8 +1207,11 @@ async function loadOverview() {
     document.getElementById('ovUsers').textContent = d.users;
     document.getElementById('ovMsg').textContent = d.totalMsg;
     document.getElementById('ovChat').textContent = d.totalChat;
+    document.getElementById('ovToday').textContent = d.todayChat != null ? d.todayChat : '—';
+    document.getElementById('ovActive').textContent = d.lastActive || '—';
     document.getElementById('ovPort').textContent = ':' + d.port;
     document.getElementById('ovUsersFoot').textContent = '已接入会话';
+    document.getElementById('ovPortFoot').textContent = d.uptime ? ('运行 ' + d.uptime) : 'admin_server';
     document.getElementById('navUserBadge').textContent = d.users;
     document.getElementById('navUserBadge').style.display = '';
     document.getElementById('navUserBadge2').textContent = d.users;
@@ -1187,11 +1219,14 @@ async function loadOverview() {
     pulse.classList.remove('off');
     if (mp) mp.classList.remove('off');
     title.textContent = '后台服务在线';
-    detail.textContent = 'http://127.0.0.1:' + d.port + ' · ' + d.time;
+    detail.textContent = '通道 ' + API_BASE + ' · ' + d.time;
+    loadRecent();
   } catch (e) {
     document.getElementById('ovUsers').textContent = '—';
     document.getElementById('ovMsg').textContent = '—';
     document.getElementById('ovChat').textContent = '—';
+    document.getElementById('ovToday').textContent = '—';
+    document.getElementById('ovActive').textContent = '—';
     document.getElementById('ovPort').textContent = '离线';
     document.getElementById('ovUsersFoot').textContent = '无法连接';
     pulse.classList.add('off');
@@ -1201,6 +1236,27 @@ async function loadOverview() {
   }
 }
 
+/* ============ 最近动态（概览页时间线） ============ */
+async function loadRecent() {
+  const wrap = document.getElementById('ovRecent');
+  if (!wrap) return;
+  try {
+    const d = await api('/api/chatlog?limit=8');
+    const list = d.lines || [];
+    if (!list.length) { wrap.innerHTML = '<div class="empty">暂无聊天记录</div>'; return; }
+    let html = '';
+    for (const l of list) {
+      html += '<div class="recent-item">'
+        + '<span class="recent-time">' + esc(l.time || '') + '</span>'
+        + '<span class="recent-nick">' + esc(l.nick || '未知') + '</span>'
+        + '<span class="recent-text">' + esc(l.text || '') + '</span>'
+        + '</div>';
+    }
+    wrap.innerHTML = html;
+  } catch (e) {
+    wrap.innerHTML = '<div class="empty">最近动态加载失败</div>';
+  }
+}
 /* ============ 用户列表 ============ */
 async function loadUsers() {
   const wrap = document.getElementById('usersWrap');
@@ -1433,6 +1489,24 @@ function renderChat() {
   wrap.innerHTML = html;
 }
 
+/* ============ 聊天记录导出 TXT ============ */
+function exportChatTXT() {
+  const kw = (document.getElementById('chatSearch').value || '').trim().toLowerCase();
+  const list = chatCache.filter(l => !kw || String(l.text).toLowerCase().includes(kw) || String(l.nick).toLowerCase().includes(kw));
+  if (!list.length) { toast('没有可导出的记录', 'err'); return; }
+  const lines = list.map(l => '[' + (l.time || '') + '] ' + (l.nick || '未知') + (l.uid ? ' [' + l.uid + ']' : '') + ': ' + (l.text || ''));
+  const blob = new Blob([lines.join('\r\n') + '\r\n'], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  a.download = 'chatlog_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes()) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  toast('已导出 ' + list.length + ' 条记录', 'ok');
+}
 /* ============ 设置 ============ */
 function initSettings() {
   document.getElementById('apiBaseInput').value = API_BASE;
