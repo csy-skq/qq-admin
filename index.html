@@ -730,6 +730,7 @@
           <input type="text" class="search" id="apiBaseInput" placeholder="http://127.0.0.1:8787">
           <button class="btn primary" onclick="saveApiBase()">保存</button>
           <button class="btn" onclick="testApi()">测试连接</button>
+          <button class="btn" onclick="resetApiBase()">恢复默认</button>
         </div>
       </div>
       <div class="setting-card">
@@ -879,7 +880,10 @@ async function doLogin() {
     showAuth('ok');
     loadOverview(); loadUsers(); loadChat(); buildChatFilter();
   } catch (e) {
-    setAuthErr('login', e.message || '登录失败');
+    const msg = (e && e.message) || '';
+    setAuthErr('login', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
+      ? '无法连接后端服务：请检查网络，或在「设置 → API服务地址」点击「测试连接」/「恢复默认」'
+      : (e.message || '登录失败'));
   } finally {
     authBtnLoading('login', false);
   }
@@ -909,7 +913,10 @@ async function doRegister() {
     showAuth('ok');
     loadOverview(); loadUsers(); loadChat(); buildChatFilter();
   } catch (e) {
-    setAuthErr('reg', e.message || '注册失败');
+    const msg = (e && e.message) || '';
+    setAuthErr('reg', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
+      ? '无法连接后端服务：请检查网络，或在「设置 → API服务地址」点击「测试连接」/「恢复默认」'
+      : (e.message || '注册失败'));
   } finally {
     authBtnLoading('reg', false);
   }
@@ -1286,6 +1293,12 @@ function saveApiBase() {
   localStorage.setItem('admin_api_base', v);
   toast('API 地址已保存', 'ok');
   setTimeout(() => { loadOverview(); loadUsers(); }, 200);
+}
+function resetApiBase() {
+  localStorage.removeItem('admin_api_base');
+  API_BASE = 'https://uri-advancement-sufficiently-wilson.trycloudflare.com';
+  document.getElementById('apiBaseInput').value = API_BASE;
+  toast('已恢复默认地址', 'ok');
 }
 async function testApi() {
   try {
