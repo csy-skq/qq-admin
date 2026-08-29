@@ -765,7 +765,36 @@
 <script>
 'use strict';
 /* ============ 全局状态 ============ */
-let API_BASE = localStorage.getItem('admin_api_base') || 'https://geographic-jun-genius-abstracts.trycloudflare.com';
+// 多通道候选列表：请求失败时自动轮换，保证任意通道可用即可登录
+const API_BASES = [
+  'https://154e04b9fea1da.lhr.life',          // 通道1: localhost.run（国内可访问）
+  'https://geographic-jun-genius-abstracts.trycloudflare.com', // 通道2: Cloudflare http2
+  'http://127.0.0.1:8787'                     // 通道3: 本机直连
+];
+let API_BASE = localStorage.getItem('admin_api_base') || API_BASES[0];
+let apiBaseIdx = Math.max(0, API_BASES.indexOf(API_BASE));
+
+// 带自动切换的请求：从当前通道开始逐个尝试，成功即固定
+async function apiFetch(path, opts) {
+  let lastErr = null;
+  const n = API_BASES.length;
+  for (let i = 0; i < n; i++) {
+    const base = API_BASES[(apiBaseIdx + i) % n];
+    try {
+      const res = await fetch(base + path, Object.assign({
+        headers: authHeaders(),
+        cache: 'no-store'
+      }, opts || {}));
+      if (base !== API_BASE) {
+        API_BASE = base;
+        localStorage.setItem('admin_api_base', base);
+      }
+      apiBaseIdx = API_BASES.indexOf(base);
+      return res;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('无法连接后端服务');
+}
 let usersCache = [];
 let chatCache = [];
 let currentDrawerUid = null;
@@ -790,11 +819,7 @@ function authHeaders(extra) {
 }
 
 async function api(path, opts) {
-  const res = await fetch(API_BASE + path, Object.assign({
-    headers: authHeaders(),
-
-    cache: 'no-store'
-  }, opts || {}));
+  const res = await apiFetch(path, opts);
   const data = await res.json().catch(() => ({ ok: false, err: '响应解析失败' }));
   if (res.status === 401 || data.needLogin) { showAuth('login'); throw new Error('未登录'); }
   if (!res.ok || data.ok === false) throw new Error(data.err || ('HTTP ' + res.status));
@@ -806,7 +831,7 @@ let currentUser = null;
 
 async function checkAuth() {
   try {
-    const r = await fetch(API_BASE + '/api/me', { headers: authHeaders(), cache: 'no-store' });
+    const r = await apiFetch('/api/me', { headers: authHeaders(), cache: 'no-store' });
     const data = await r.json();
     if (data && data.ok && data.user) {
       currentUser = data.user;
@@ -866,10 +891,10 @@ async function doLogin() {
   if (!username || !password) { setAuthErr('login', '请输入用户名和密码'); return; }
   authBtnLoading('login', true);
   try {
-    const r = await fetch(API_BASE + '/api/login', {
+    const r = await apiFetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-  
+
       body: JSON.stringify({ username, password })
     });
     const data = await r.json();
@@ -882,7 +907,7 @@ async function doLogin() {
   } catch (e) {
     const msg = (e && e.message) || '';
     setAuthErr('login', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
-      ? '无法连接后端服务：请检查网络，或在「设置 → API服务地址」点击「测试连接」/「恢复默认」'
+      ? '无法连接后端服务：已自动尝试多个通道均失败，请检查网络后重试'
       : (e.message || '登录失败'));
   } finally {
     authBtnLoading('login', false);
@@ -899,7 +924,7 @@ async function doRegister() {
   if (qq && !/^[1-9]\d{4,10}$/.test(qq)) { setAuthErr('reg', 'QQ号格式不正确'); return; }
   authBtnLoading('reg', true);
   try {
-    const r = await fetch(API_BASE + '/api/register', {
+    const r = await apiFetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
 
@@ -915,7 +940,7 @@ async function doRegister() {
   } catch (e) {
     const msg = (e && e.message) || '';
     setAuthErr('reg', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
-      ? '无法连接后端服务：请检查网络，或在「设置 → API服务地址」点击「测试连接」/「恢复默认」'
+      ? '无法连接后端服务：已自动尝试多个通道均失败，请检查网络后重试'
       : (e.message || '注册失败'));
   } finally {
     authBtnLoading('reg', false);
@@ -924,7 +949,7 @@ async function doRegister() {
 
 async function doLogout() {
   try {
-    await fetch(API_BASE + '/api/logout', { method: 'POST', headers: authHeaders() });
+    await apiFetch('/api/logout', { method: 'POST', headers: authHeaders() });
   } catch (e) {}
   localStorage.removeItem('admin_token');
   currentUser = null;
@@ -1296,7 +1321,8 @@ function saveApiBase() {
 }
 function resetApiBase() {
   localStorage.removeItem('admin_api_base');
-  API_BASE = 'https://geographic-jun-genius-abstracts.trycloudflare.com';
+  API_BASE = API_BASES[0];
+  apiBaseIdx = 0;
   document.getElementById('apiBaseInput').value = API_BASE;
   toast('已恢复默认地址', 'ok');
 }
