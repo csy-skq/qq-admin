@@ -104,6 +104,125 @@
     border-radius: 99px; display: flex; align-items: center; justify-content: center;
   }
   .sidebar-foot { padding: 12px 8px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted-2); }
+  /* v35: 侧栏用户信息 */
+  .sidebar-user {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 10px; margin-bottom: 8px;
+    background: rgba(67, 160, 71, 0.06); border-radius: var(--r-md);
+    border: 1px solid var(--border);
+  }
+  .sidebar-user .su-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sidebar-user .su-info { flex: 1; min-width: 0; }
+  .sidebar-user .su-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-user .su-role { font-size: 11px; color: var(--accent); font-weight: 500; }
+  .sidebar-user .su-logout {
+    background: none; border: none; color: var(--muted); cursor: pointer;
+    font-size: 16px; padding: 4px; border-radius: var(--r-sm);
+    transition: all var(--t-fast);
+  }
+  .sidebar-user .su-logout:hover { color: var(--danger); background: rgba(229, 57, 53, 0.08); }
+  /* v35: 问候语 + 时间 */
+  .greeting-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
+  }
+  .greeting-text {
+    font-size: 22px; font-weight: 700; color: var(--text);
+  }
+  .greeting-text small {
+    display: block; font-size: 13px; font-weight: 400; color: var(--muted); margin-top: 4px;
+  }
+  .greeting-time {
+    font-size: 13px; color: var(--muted); font-family: ui-monospace, Consolas, monospace;
+    background: var(--panel); padding: 6px 14px; border-radius: 99px;
+    border: 1px solid var(--border);
+  }
+  /* v35: 快捷操作 */
+  .quick-actions {
+    display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .quick-action {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: var(--r-md);
+    cursor: pointer; font-size: 13px; color: var(--text-2);
+    transition: all var(--t-fast);
+  }
+  .quick-action:hover { border-color: var(--accent); background: rgba(67, 160, 71, 0.06); transform: translateY(-1px); }
+  .quick-action .qa-icon { font-size: 16px; }
+  /* v35: 统计卡片增强 */
+  .stat-card .stat-icon {
+    position: absolute; top: 16px; right: 16px;
+    font-size: 28px; opacity: 0.12; pointer-events: none;
+  }
+  .stat-card .stat-trend {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 600; margin-top: 6px;
+    padding: 2px 8px; border-radius: 99px;
+  }
+  .stat-card .stat-trend.up { background: rgba(67, 160, 71, 0.1); color: var(--ok); }
+  .stat-card .stat-trend.neutral { background: rgba(122, 154, 128, 0.1); color: var(--muted); }
+  /* v35: 系统信息卡片 */
+  .sys-info-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px; margin-top: 24px;
+  }
+  .sys-info-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg);
+    padding: 20px;
+  }
+  .sys-info-card .si-title {
+    font-size: 13px; font-weight: 600; color: var(--muted-2);
+    margin-bottom: 14px; display: flex; align-items: center; gap: 6px;
+  }
+  .sys-info-card .si-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; font-size: 13px;
+    border-bottom: 1px solid rgba(76, 175, 80, 0.06);
+  }
+  .sys-info-card .si-row:last-child { border-bottom: none; }
+  .sys-info-card .si-label { color: var(--text-2); }
+  .sys-info-card .si-value { font-weight: 600; color: var(--text); font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+  .si-value.online { color: var(--ok); }
+  .si-value.offline { color: var(--danger); }
+  /* v35: 用户卡片增强 */
+  .user-card .uc-top {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .user-card .uc-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .user-card .uc-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .user-card .uc-qq { font-size: 11px; color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  .user-card .uc-meta {
+    display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-bottom: 10px;
+  }
+  .user-card .uc-meta .uc-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 600;
+  }
+  .uc-badge.msgs { background: rgba(67, 160, 71, 0.08); color: var(--accent); }
+  .uc-badge.time { background: rgba(122, 154, 128, 0.08); color: var(--muted-2); }
+  .user-card .uc-actions { display: flex; gap: 6px; }
+  .user-card .uc-actions .btn { padding: 6px 12px; font-size: 12px; }
+  /* v35: 抽屉增强 */
+  .drawer-profile-section {
+    background: rgba(67, 160, 71, 0.04); border: 1px solid var(--border);
+    border-radius: var(--r-md); padding: 16px; margin-bottom: 16px;
+  }
+  .drawer-profile-section .dp-title {
+    font-size: 12px; font-weight: 600; color: var(--muted-2);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+  }
   /* 主区 */
   .main { flex: 1; padding: 28px 32px; min-width: 0; max-width: 1400px; margin: 0 auto; width: 100%; }
   .page { display: none; animation: fadeIn 0.3s ease; }
@@ -763,7 +882,15 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="brand-logo">沈</div>
-      <div class="brand-text">沈不渝 · 管理台<small>QQ 陪聊后台</small></div>
+      <div class="brand-text">沈不渝 · 管理台<small>v35 · QQ 陪聊后台</small></div>
+    </div>
+    <div class="sidebar-user" id="sidebarUser">
+      <div class="su-avatar" id="suAvatar">A</div>
+      <div class="su-info">
+        <div class="su-name" id="suName">管理员</div>
+        <div class="su-role">Owner</div>
+      </div>
+      <button class="su-logout" onclick="doLogout()" title="退出登录">⏻</button>
     </div>
     <nav class="nav">
       <div class="nav-item active" data-page="overview"><span class="ico">📊</span><span class="txt">概览</span><span class="badge" id="navUserBadge" style="display:none">0</span></div>
@@ -771,28 +898,50 @@
       <div class="nav-item" data-page="chatlog"><span class="ico">💬</span><span class="txt">聊天记录</span></div>
       <div class="nav-item" data-page="settings"><span class="ico">⚙️</span><span class="txt">设置</span></div>
     </nav>
-    <div class="sidebar-foot" id="sidebarFoot">v1.0 · 本机服务</div>
+    <div class="sidebar-foot" id="sidebarFoot">v35 · 本机服务</div>
   </aside>
 
   <!-- 主区 -->
   <main class="main">
     <!-- 概览 -->
     <section class="page active" id="page-overview">
-      <div class="page-head">
-        <div class="page-title">概览<small>机器人「沈不渝」运行状态</small></div>
-        <button class="btn ghost" onclick="loadOverview()">↻ 刷新</button>
+      <div class="greeting-bar">
+        <div class="greeting-text" id="greetingText">早上好<small>管理员，欢迎回来</small></div>
+        <div class="greeting-time" id="greetingTime">--:--</div>
+      </div>
+      <div class="quick-actions">
+        <div class="quick-action" onclick="loadOverview()"><span class="qa-icon">↻</span>刷新数据</div>
+        <div class="quick-action" onclick="loadUsers()"><span class="qa-icon">👥</span>用户列表</div>
+        <div class="quick-action" onclick="loadChat()"><span class="qa-icon">💬</span>聊天记录</div>
+        <div class="quick-action" onclick="switchPage('settings')"><span class="qa-icon">⚙️</span>设置</div>
       </div>
       <div class="stats">
-        <div class="stat-card accent"><div class="stat-label">已接入用户</div><div class="stat-value" id="ovUsers">—</div><div class="stat-foot" id="ovUsersFoot">等待连接…</div></div>
-        <div class="stat-card"><div class="stat-label">历史消息总数</div><div class="stat-value" id="ovMsg">—</div><div class="stat-foot">memory/*.json 合计</div></div>
-        <div class="stat-card"><div class="stat-label">今日聊天</div><div class="stat-value" id="ovToday">—</div><div class="stat-foot">今天 chat_log 条数</div></div>
-        <div class="stat-card"><div class="stat-label">全局聊天记录</div><div class="stat-value" id="ovChat">—</div><div class="stat-foot">chat_log.txt 行数</div></div>
-        <div class="stat-card"><div class="stat-label">最后活跃</div><div class="stat-value" id="ovActive">—</div><div class="stat-foot">最近一条聊天时间</div></div>
-        <div class="stat-card ok"><div class="stat-label">后台服务</div><div class="stat-value" id="ovPort">—</div><div class="stat-foot" id="ovPortFoot">admin_server</div></div>
+        <div class="stat-card accent"><span class="stat-icon">👥</span><div class="stat-label">已接入用户</div><div class="stat-value" id="ovUsers">—</div><div class="stat-foot" id="ovUsersFoot">等待连接…</div></div>
+        <div class="stat-card"><span class="stat-icon">📨</span><div class="stat-label">历史消息总数</div><div class="stat-value" id="ovMsg">—</div><div class="stat-foot">memory/*.json 合计</div></div>
+        <div class="stat-card"><span class="stat-icon">📅</span><div class="stat-label">今日聊天</div><div class="stat-value" id="ovToday">—</div><div class="stat-foot">今天 chat_log 条数</div></div>
+        <div class="stat-card"><span class="stat-icon">📝</span><div class="stat-label">全局聊天记录</div><div class="stat-value" id="ovChat">—</div><div class="stat-foot">chat_log.txt 行数</div></div>
+        <div class="stat-card"><span class="stat-icon">⏰</span><div class="stat-label">最后活跃</div><div class="stat-value" id="ovActive">—</div><div class="stat-foot">最近一条聊天时间</div></div>
+        <div class="stat-card ok"><span class="stat-icon">🖥️</span><div class="stat-label">后台服务</div><div class="stat-value" id="ovPort">—</div><div class="stat-foot" id="ovPortFoot">admin_server</div></div>
       </div>
       <div class="connection-bar">
         <span class="pulse" id="apiPulse"></span>
         <div class="conn-text"><b id="connTitle">正在连接…</b><br><span style="color:var(--muted);font-size:12px" id="connDetail">正在探测后端服务</span></div>
+      </div>
+      <div class="sys-info-grid">
+        <div class="sys-info-card">
+          <div class="si-title">🤖 QQ 陪聊服务</div>
+          <div class="si-row"><span class="si-label">admin_server</span><span class="si-value online" id="siAdmin">运行中 :8787</span></div>
+          <div class="si-row"><span class="si-label">qq_bridge</span><span class="si-value online" id="siBridge">运行中</span></div>
+          <div class="si-row"><span class="si-label">运行时长</span><span class="si-value" id="siUptime">—</span></div>
+          <div class="si-row"><span class="si-label">API 通道</span><span class="si-value" id="siApiBase">同源</span></div>
+        </div>
+        <div class="sys-info-card">
+          <div class="si-title">📊 系统资源</div>
+          <div class="si-row"><span class="si-label">admin_server 运存</span><span class="si-value" id="siAdminMem">2.7 MB</span></div>
+          <div class="si-row"><span class="si-label">qq_bridge 运存</span><span class="si-value" id="siBridgeMem">0.7 MB</span></div>
+          <div class="si-row"><span class="si-label">proot 容器</span><span class="si-value" id="siProotMem">6.7 MB</span></div>
+          <div class="si-row"><span class="si-label">Operit 主进程</span><span class="si-value" id="siOperitMem">352 MB</span></div>
+        </div>
       </div>
       <div class="recent-panel">
         <div class="page-head" style="margin-bottom:10px;">
@@ -875,8 +1024,6 @@
 </aside>
 
 <div id="toast"></div>
-  </div>
-
   <!-- ===== 观察者极简主页（viewer 专属） ===== -->
   <div class="viewer-home" id="viewerHome" style="display:none;">
     <div class="vh-brand">
@@ -1289,21 +1436,32 @@ function renderTopbarUser() {
       '<span class="auth-role-badge ' + role + '">' + roleText + '</span>' +
       '<button class="logout-btn" onclick="doLogout()">退出</button>';
   }
-  // 桌面端侧栏底部
-  const foot = document.getElementById('sidebarFoot');
-  if (foot) {
-    foot.innerHTML =
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">' +
-        '<div class="avatar" style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#43a047,#66bb6a);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">' + esc(initial) + '</div>' +
-        '<span style="color:#1b2e1f;font-weight:600;">' + esc(username) + '</span>' +
-        '<span class="auth-role-badge ' + role + '" style="margin-left:auto;">' + roleText + '</span>' +
-      '</div>' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#7a9a80;">' +
-        '<span>v1.0 · 本机服务</span>' +
-        '<a href="javascript:doLogout()" style="color:#5a8060;text-decoration:none;border-bottom:1px dashed #c8e6c9;">退出登录</a>' +
-      '</div>';
-  }
+  // v35: 侧栏用户信息卡
+  const suAvatar = document.getElementById('suAvatar');
+  const suName = document.getElementById('suName');
+  if (suAvatar) suAvatar.textContent = initial;
+  if (suName) suName.textContent = username;
+  // v35: 问候语
+  updateGreeting();
 }
+/* v35: 问候语 + 实时时钟 */
+function updateGreeting() {
+  const now = new Date();
+  const h = now.getHours();
+  let greeting = '你好';
+  if (h >= 5 && h < 9) greeting = '早上好';
+  else if (h >= 9 && h < 12) greeting = '上午好';
+  else if (h >= 12 && h < 14) greeting = '中午好';
+  else if (h >= 14 && h < 18) greeting = '下午好';
+  else if (h >= 18 && h < 22) greeting = '晚上好';
+  else greeting = '夜深了';
+  const name = (currentUser && currentUser.username) || '管理员';
+  const gt = document.getElementById('greetingText');
+  const gtTime = document.getElementById('greetingTime');
+  if (gt) gt.innerHTML = greeting + '<small>' + name + '，欢迎回来</small>';
+  if (gtTime) gtTime.textContent = now.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+setInterval(updateGreeting, 1000);
 
 // Enter 键提交
 document.addEventListener('keydown', (e) => {
@@ -1394,6 +1552,15 @@ async function loadOverview() {
     if (mp) mp.classList.remove('off');
     title.textContent = '后台服务在线';
     detail.textContent = '通道 ' + API_BASE + ' · ' + d.time;
+    // v35: 系统信息
+    const siAdmin = document.getElementById('siAdmin');
+    const siBridge = document.getElementById('siBridge');
+    const siUptime = document.getElementById('siUptime');
+    const siApiBase = document.getElementById('siApiBase');
+    if (siAdmin) siAdmin.textContent = '运行中 :' + d.port;
+    if (siBridge) siBridge.textContent = '运行中';
+    if (siUptime) siUptime.textContent = d.uptime || '—';
+    if (siApiBase) siApiBase.textContent = API_BASE || '同源';
     loadRecent();
   } catch (e) {
     document.getElementById('ovUsers').textContent = '—';
@@ -1458,18 +1625,21 @@ function renderUsers() {
     const initial = String(u.nick || u.uid).slice(0, 1).toUpperCase();
     const p = u.profile ? String(u.profile).slice(0, 60).replace(/\n/g, ' ') : '';
     html += '<div class="user-card" data-uid="' + esc(u.uid) + '">'
-      + '<div class="user-head">'
-      +   '<div class="avatar">' + esc(initial) + '</div>'
-      +   '<div class="user-info">'
-      +     '<div class="user-nick">' + esc(u.nick) + '</div>'
-      +     '<div class="user-uid">UID: ' + esc(u.uid) + '</div>'
+      + '<div class="uc-top">'
+      +   '<div class="uc-avatar">' + esc(initial) + '</div>'
+      +   '<div style="flex:1;min-width:0">'
+      +     '<div class="uc-name">' + esc(u.nick) + '</div>'
+      +     '<div class="uc-qq">UID: ' + esc(u.uid) + '</div>'
       +   '</div>'
       + '</div>'
-      + '<div class="user-meta">'
-      +   '<span>📝 ' + u.histLen + ' 条</span>'
-      +   '<span class="dot-sep">⏱ ' + esc((u.lastTime || '').slice(5)) + '</span>'
+      + '<div class="uc-meta">'
+      +   '<span class="uc-badge msgs">📝 ' + u.histLen + ' 条</span>'
+      +   '<span class="uc-badge time">⏱ ' + esc((u.lastTime || '').slice(5)) + '</span>'
       + '</div>'
-      + (p ? '<div class="user-preview">' + esc(p) + '…</div>' : '<div class="user-preview empty">（暂无档案）</div>')
+      + (p ? '<div class="profile-preview" style="font-size:12px;color:var(--muted);margin:8px 0;line-height:1.5;max-height:3em;overflow:hidden">' + esc(p) + '</div>' : '')
+      + '<div class="uc-actions">'
+      +   '<button class="btn" onclick="openUser(\'' + esc(u.uid) + '\')">详情</button>'
+      + '</div>'
       + '</div>';
   }
   wrap.innerHTML = html;
@@ -1500,13 +1670,12 @@ async function openUser(uid) {
 
 function renderDrawer(d) {
   const body = document.getElementById('drawerBody');
-  // 数据隔离：viewer 只能查看自己绑定的 QQ（只读），owner 拥有全部管理操作
   const isAdmin = !!(currentUser && currentUser.role === 'owner');
   let h = '';
-  // 档案
-  h += '<div class="section"><div class="section-title"><span class="ico">📇</span>人设档案</div>'
-    + '<textarea id="profileArea" ' + (isAdmin ? '' : 'readonly ') + 'placeholder="（空）">' + esc(d.profile || '') + '</textarea>'
-    + '<div class="form-row" style="margin-top:10px">'
+  // v35: 档案区（增强样式）
+  h += '<div class="drawer-profile-section"><div class="dp-title"><span>📇</span>人设档案</div>'
+    + '<textarea id="profileArea" ' + (isAdmin ? '' : 'readonly ') + 'placeholder="（空）沈不渝还没有为该用户建立档案…">' + esc(d.profile || '') + '</textarea>'
+    + '<div style="display:flex;gap:8px;align-items:center;margin-top:10px">'
     + (isAdmin
         ? '<button class="btn primary" onclick="saveProfile(\'' + escAttr(d.uid) + '\')">保存档案</button>'
           + '<button class="btn" onclick="loadProfile()">放弃修改</button>'
