@@ -845,7 +845,7 @@ const API_BASES = (function () {
   const bases = [''];
   const origin = (location.origin || '').replace(/\/+$/, '');
   if (origin && !bases.includes(origin)) bases.push(origin);
-  bases.push('https://a07bae2e9c6e8d.lhr.life');   // lhr 隧道（当前有效）
+  bases.push('https://58bf8bbc13b216.lhr.life');   // lhr 隧道（当前有效，由 tunnel_keepalive.sh 自动刷新）
   bases.push('http://127.0.0.1:8787');              // 本机直连
   return bases;
 })();
