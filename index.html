@@ -598,6 +598,46 @@
   .topbar-user .logout-btn:hover {
     color: #c62828; border-bottom-color: #c62828;
   }
+  /* ============== 观察者极简主页 ============== */
+  .viewer-home {
+    position: fixed; inset: 0; z-index: 9000;
+    background: linear-gradient(160deg, #e8f5e9 0%, #f4f9f6 55%, #ffffff 100%);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 20px 16px 40px;
+  }
+  .vh-brand {
+    display: flex; align-items: center; gap: 12px;
+    max-width: 560px; margin: 0 auto 20px;
+  }
+  .vh-brand .auth-brand-text { margin: 0; }
+  .vh-card {
+    max-width: 560px; margin: 0 auto 16px;
+    background: #fff; border-radius: 16px; padding: 20px;
+    box-shadow: 0 8px 30px rgba(46, 125, 50, 0.08), 0 0 0 1px rgba(76, 175, 80, 0.07);
+  }
+  .vh-title { font-size: 15px; font-weight: 700; color: #2e5240; margin-bottom: 14px; }
+  .vh-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e3efe4; font-size: 14px; }
+  .vh-row:last-child { border-bottom: none; }
+  .vh-label { color: #7a9a80; flex-shrink: 0; margin-right: 16px; }
+  .vh-row b { color: #1f3d2c; font-weight: 600; word-break: break-all; text-align: right; }
+  .vh-card textarea {
+    width: 100%; min-height: 110px; resize: vertical;
+    border: 1px solid #cfe3d2; border-radius: 10px; padding: 12px;
+    font-size: 14px; line-height: 1.6; color: #2c4a38;
+    background: #fbfdfb; box-sizing: border-box;
+  }
+  .vh-card textarea:focus { outline: none; border-color: #66bb6a; background: #fff; }
+  .vh-actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .vh-history { display: flex; flex-direction: column; gap: 10px; }
+  .vh-msg { border-radius: 12px; padding: 10px 14px; font-size: 14px; line-height: 1.55; }
+  .vh-msg.user { background: #e8f5e9; align-self: flex-start; max-width: 92%; }
+  .vh-msg.bot { background: #f1f8f2; align-self: flex-end; max-width: 92%; border: 1px solid #e3efe4; }
+  .vh-msg-head { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
+  .vh-msg-who { font-size: 12px; font-weight: 700; color: #43a047; }
+  .vh-msg-who.bot { color: #2e7d32; }
+  .vh-msg-time { font-size: 11px; color: #a3bda6; margin-left: auto; }
+  .vh-msg-text { white-space: pre-wrap; word-break: break-word; color: #2c4a38; }
+  .vh-empty { color: #a3bda6; text-align: center; padding: 24px 0; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -835,6 +875,35 @@
 </aside>
 
 <div id="toast"></div>
+  </div>
+
+  <!-- ===== 观察者极简主页（viewer 专属） ===== -->
+  <div class="viewer-home" id="viewerHome" style="display:none;">
+    <div class="vh-brand">
+      <div class="auth-brand-logo">沈</div>
+      <div class="auth-brand-text">沈不渝 · 我的空间<small>观察者视图</small></div>
+      <button class="btn ghost" onclick="doLogout()" style="margin-left:auto;flex-shrink:0;">退出</button>
+    </div>
+    <div class="vh-card">
+      <div class="vh-title">👤 我的账户</div>
+      <div class="vh-row"><span class="vh-label">用户名</span><b id="vhUser">—</b></div>
+      <div class="vh-row"><span class="vh-label">角色</span><b id="vhRole">观察者</b></div>
+      <div class="vh-row"><span class="vh-label">绑定QQ</span><b id="vhQQ">—</b></div>
+      <div class="vh-row"><span class="vh-label">注册时间</span><b id="vhCreated">—</b></div>
+    </div>
+    <div class="vh-card">
+      <div class="vh-title">📇 沈不渝对我的档案</div>
+      <textarea id="vhProfile" placeholder="（空）沈不渝还没有为我建立档案…"></textarea>
+      <div class="vh-actions">
+        <button class="btn primary" onclick="saveMyProfile()">保存档案</button>
+        <span style="font-size:12px;color:#7a9a80;">保存后沈不渝会在对话中记住这些信息</span>
+      </div>
+    </div>
+    <div class="vh-card">
+      <div class="vh-title">💬 最近的聊天</div>
+      <div id="vhHistory" class="vh-history"><div class="vh-empty">加载中…</div></div>
+    </div>
+  </div>
 
 <script>
 'use strict';
@@ -934,13 +1003,24 @@ async function checkAuth() {
 function showAuth(mode) {
   const layer = document.getElementById('authLayer');
   const app = document.getElementById('appRoot');
+  const vh = document.getElementById('viewerHome');
   if (mode === 'ok') {
     layer.style.display = 'none';
-    app.style.display = '';
-    renderTopbarUser();
+    // v34: 角色分流——owner 进完整管理台，viewer 进极简个人空间
+    const isOwner = !!(currentUser && currentUser.role === 'owner');
+    if (isOwner) {
+      app.style.display = '';
+      if (vh) vh.style.display = 'none';
+      renderTopbarUser();
+    } else {
+      app.style.display = 'none';
+      if (vh) vh.style.display = '';
+      renderViewerHome();
+    }
   } else {
     layer.style.display = 'flex';
     app.style.display = 'none';
+    if (vh) vh.style.display = 'none';
     if (mode === 'reg') {
       document.getElementById('authLogin').style.display = 'none';
       document.getElementById('authReg').style.display = '';
@@ -1000,7 +1080,9 @@ async function doLogin() {
     currentUser = data.user;
     toast('登录成功', 'ok');
     showAuth('ok');
-    loadOverview(); loadUsers(); loadChat(); buildChatFilter();
+    if (currentUser && currentUser.role === 'owner') {
+      loadOverview(); loadUsers(); loadChat(); buildChatFilter();
+    }
   } catch (e) {
     const msg = (e && e.message) || '';
     setAuthErr('login', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
@@ -1047,7 +1129,9 @@ async function doRegister() {
     currentUser = data.user;
     toast('注册成功，已自动登录', 'ok');
     showAuth('ok');
-    loadOverview(); loadUsers(); loadChat(); buildChatFilter();
+    if (currentUser && currentUser.role === 'owner') {
+      loadOverview(); loadUsers(); loadChat(); buildChatFilter();
+    }
   } catch (e) {
     const msg = (e && e.message) || '';
     setAuthErr('reg', msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('fetch')
@@ -1133,8 +1217,61 @@ async function doLogout() {
   localStorage.removeItem('admin_token');
   currentUser = null;
   document.getElementById('loginPass').value = '';
+  const vh = document.getElementById('viewerHome');
+  if (vh) vh.style.display = 'none';
   showAuth('login');
   toast('已退出登录', 'ok');
+}
+
+/* ============ 观察者极简主页 ============ */
+// v34: viewer 专属个人空间——账户信息 + 可编辑档案 + 最近聊天（只能访问自己）
+async function renderViewerHome() {
+  const u = currentUser || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('vhUser', u.username || '—');
+  set('vhRole', u.role === 'owner' ? '管理员' : '观察者');
+  set('vhQQ', u.qq || '未绑定');
+  set('vhCreated', u.createdAt ? new Date(u.createdAt).toLocaleString('zh-CN') : '—');
+  const qq = u.qq;
+  const hist = document.getElementById('vhHistory');
+  if (!qq) {
+    if (hist) hist.innerHTML = '<div class="vh-empty">未绑定QQ，暂无聊天数据</div>';
+    return;
+  }
+  try {
+    const r = await apiFetch('/api/user/' + qq, { headers: authHeaders(), cache: 'no-store' });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.err || '加载失败');
+    const p = document.getElementById('vhProfile');
+    if (p) p.value = d.profile || '';
+    const list = (d.history || []).slice().reverse().slice(0, 30);
+    if (!hist) return;
+    if (!list.length) { hist.innerHTML = '<div class="vh-empty">暂无聊天记录</div>'; return; }
+    hist.innerHTML = list.map(m => {
+      const isUser = m.role === 'user';
+      return '<div class="vh-msg ' + (isUser ? 'user' : 'bot') + '">'
+        + '<div class="vh-msg-head"><span class="vh-msg-who ' + (isUser ? '' : 'bot') + '">' + (isUser ? '我' : '沈不渝') + '</span><span class="vh-msg-time">#' + (m.idx + 1) + '</span></div>'
+        + '<div class="vh-msg-text">' + esc(m.content) + '</div>'
+        + '</div>';
+    }).join('');
+  } catch (e) {
+    if (hist) hist.innerHTML = '<div class="vh-empty">❌ ' + esc(e.message) + '</div>';
+  }
+}
+async function saveMyProfile() {
+  const u = currentUser || {};
+  if (!u.qq) { toast('未绑定QQ，无法保存档案', 'err'); return; }
+  const content = document.getElementById('vhProfile').value;
+  try {
+    const r = await apiFetch('/api/user/' + u.qq, {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
+      body: JSON.stringify({ content })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.err || '保存失败');
+    toast('档案已保存，沈不渝会记住这些', 'ok');
+  } catch (e) { toast('保存失败：' + e.message, 'err'); }
 }
 
 function renderTopbarUser() {
@@ -1574,7 +1711,7 @@ async function testApi() {
 window.addEventListener('DOMContentLoaded', async () => {
   initSettings();
   const ok = await checkAuth();
-  if (ok) {
+  if (ok && currentUser && currentUser.role === 'owner') {
     loadOverview();
     loadUsers();
     loadChat();
