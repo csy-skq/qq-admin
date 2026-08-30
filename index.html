@@ -854,6 +854,7 @@ if (!API_BASES.includes(API_BASE)) API_BASE = API_BASES[0];  // 清理已失效�
 let apiBaseIdx = Math.max(0, API_BASES.indexOf(API_BASE));
 
 // 带自动切换的请求：从当前通道开始逐个尝试，成功即固定
+// v33: 非 JSON 响应（如 GitHub Pages 404 HTML、隧道失效页）视为通道不可用，自动跳过换下一通道
 async function apiFetch(path, opts) {
   let lastErr = null;
   const n = API_BASES.length;
@@ -864,13 +865,21 @@ async function apiFetch(path, opts) {
         headers: authHeaders(),
         cache: 'no-store'
       }, opts || {}));
+      const ct = (res.headers.get('content-type') || '').toLowerCase();
+      if (!ct.includes('application/json')) {
+        const e = new Error('non-json:' + base + ':' + res.status);
+        e.skip = true;
+        throw e;
+      }
       if (base !== API_BASE) {
         API_BASE = base;
         localStorage.setItem('admin_api_base', base);
       }
       apiBaseIdx = API_BASES.indexOf(base);
       return res;
-    } catch (e) { lastErr = e; }
+    } catch (e) {
+      if (!(e && e.skip)) lastErr = e;
+    }
   }
   throw lastErr || new Error('无法连接后端服务');
 }
