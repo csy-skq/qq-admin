@@ -456,6 +456,7 @@
   }
   .auth-card {
     position: relative; z-index: 10;
+    flex-shrink: 0;   /* v32: 禁止flex容器压缩卡片——内容超高时由mask滚动，输入框始终不被压没 */
     width: 100%; max-width: 420px;
     margin-top: auto;
     margin-bottom: auto;
@@ -677,7 +678,7 @@
         <div class="auth-brand-text">沈不渝 · 管理台<small>QQ 陪聊后台</small></div>
       </div>
       <div class="auth-title">重置密码</div>
-      <div class="auth-sub">输入绑定的QQ号，验证码将发送到该QQ</div>
+      <div class="auth-sub">输入绑定的QQ号</div>
       <div id="forgotErr" class="auth-err"></div>
       <div class="auth-field">
         <label class="auth-label">绑定QQ</label>
@@ -839,12 +840,17 @@
 'use strict';
 /* ============ 全局状态 ============ */
 // 多通道候选列表：请求失败时自动轮换，保证任意通道可用即可登录
-const API_BASES = [
-  'https://b4a5fbe12a37c6.lhr.life',          // 通道1: localhost.run（国内可访问）
-  'https://geographic-jun-genius-abstracts.trycloudflare.com', // 通道2: Cloudflare http2
-  'http://127.0.0.1:8787'                     // 通道3: 本机直连
-];
+// v32: 后端通道——通道1改为同源相对路径（页面从哪个隧道/域名访问就请求哪个，隧道域名变化自动适配，不再硬编码失效域名）
+const API_BASES = (function () {
+  const bases = [''];
+  const origin = (location.origin || '').replace(/\/+$/, '');
+  if (origin && !bases.includes(origin)) bases.push(origin);
+  bases.push('https://a07bae2e9c6e8d.lhr.life');   // lhr 隧道（当前有效）
+  bases.push('http://127.0.0.1:8787');              // 本机直连
+  return bases;
+})();
 let API_BASE = localStorage.getItem('admin_api_base') || API_BASES[0];
+if (!API_BASES.includes(API_BASE)) API_BASE = API_BASES[0];  // 清理已失效的旧通道记忆
 let apiBaseIdx = Math.max(0, API_BASES.indexOf(API_BASE));
 
 // 带自动切换的请求：从当前通道开始逐个尝试，成功即固定
